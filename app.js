@@ -232,6 +232,11 @@ const gameState = {
 const blankProfile = (id, username) => ({
     id,
     username,
+    title: 'Noob',
+    role: 'player',
+    tokens: 0,
+    xp: 0,
+    level: 1,
     coins: 0,
     streak: 0,
     best_streak: 0,
@@ -271,12 +276,19 @@ function applyProfile() {
     $('#streak-count').textContent = profile.streak;
     $('#profile-blook').textContent = profile.equipped_blook.icon;
     $('#profile-badge').textContent = `${profile.equipped_blook.rarity} blook`;
+    $('#profile-title').textContent = profile.title || 'Noob';
+    $('#owner-nav').classList.toggle('hidden', profile.role !== 'owner');
 }
 
 async function saveProfile() {
     const { error } = await db
         .from('profiles')
         .update({
+            title: profile.title || 'Noob',
+            role: profile.role || 'player',
+            tokens: profile.tokens || 0,
+            xp: profile.xp || 0,
+            level: profile.level || getLevel(profile.xp || 0),
             coins: profile.coins,
             streak: profile.streak,
             best_streak: profile.best_streak,
@@ -340,7 +352,18 @@ function showView(name) {
     if (name === 'packs') drawPacks();
     if (name === 'collection') drawLocker();
     if (name === 'stats') drawStats();
+    if (name === 'leaderboard') drawLeaderboards();
+    if (name === 'owner' && profile.role === 'owner') drawOwnerPanel();
     if (name === 'games') drawGames();
+}
+
+function getLevel(xp) {
+    return Math.floor(xp / 100) + 1;
+}
+
+function addXp(amount) {
+    profile.xp = (profile.xp || 0) + amount;
+    profile.level = getLevel(profile.xp);
 }
 
 async function handleAuth(event) {
@@ -422,6 +445,7 @@ async function answerQuestion(button, correct) {
     if (button && button.textContent === correct) {
         const reward = modes[gameState.mode][0];
         profile.coins += reward;
+        profile.tokens = (profile.tokens || 0) + 1;
         profile.streak += 1;
         profile.best_streak = Math.max(profile.best_streak, profile.streak);
         stats.correctAnswers = (stats.correctAnswers || 0) + 1;
@@ -480,6 +504,8 @@ async function openPack(index) {
     if (profile.coins < pack[1]) return;
 
     profile.coins -= pack[1];
+    addXp(Math.max(25, pack[1]));
+    profile.tokens = (profile.tokens || 0) + 2;
     profile.stats.packsOpened = (profile.stats.packsOpened || 0) + 1;
 
     const blook = pack[3][Math.floor(Math.random() * pack[3].length)];
@@ -568,6 +594,63 @@ function drawStats() {
             </article>
         `)
         .join('');
+}
+
+async function drawLeaderboards() {
+    const tokenList = $('#tokens-leaderboard');
+    const levelList = $('#levels-leaderboard');
+
+    if (offlineMode) {
+        const rows = offlineRows('profiles');
+        renderLeaderboard(tokenList, rows.sort((a, b) => (b.tokens || 0) - (a.tokens || 0)), 'tokens');
+        renderLeaderboard(levelList, rows.sort((a, b) => (b.level || 1) - (a.level || 1)), 'level');
+        return;
+    }
+
+    const { data, error } = await db
+        .from('leaderboard')
+        .select('username,title,tokens,xp,level')
+        .order('tokens', { ascending: false })
+        .limit(20);
+
+    if (error) {
+        tokenList.innerHTML = '<div class="empty">Leaderboards are unavailable until the latest SQL schema is run.</div>';
+        levelList.innerHTML = '<div class="empty">Leaderboards are unavailable until the latest SQL schema is run.</div>';
+        return;
+    }
+
+    renderLeaderboard(tokenList, data, 'tokens');
+    renderLeaderboard(levelList, [...data].sort((a, b) => (b.level || getLevel(b.xp || 0)) - (a.level || getLevel(a.xp || 0))), 'level');
+}
+
+function renderLeaderboard(container, players, type) {
+    container.innerHTML = players.map((player, index) => {
+        const value = type === 'tokens' ? `${player.tokens || 0} tokens` : `Level ${player.level || getLevel(player.xp || 0)}`;
+        return `<div class="message"><strong>#${index + 1} ${player.username}</strong><p>${player.title || 'Noob'} · ${value}</p></div>`;
+    }).join('') || '<div class="empty">No players yet.</div>';
+}
+
+async function drawOwnerPanel() {
+    if (profile.role !== 'owner') return;
+
+    const { data, error } = await db
+        .from('profiles')
+        .select('username,title,role,tokens,xp,level,coins')
+        .limit(1000);
+
+    if (error) {
+        $('#owner-stats').innerHTML = '<div class="empty">Owner data is unavailable.</div>';
+        return;
+    }
+
+    const totalTokens = data.reduce((sum, player) => sum + (player.tokens || 0), 0);
+    const highestLevel = Math.max(...data.map((player) => player.level || getLevel(player.xp || 0)), 1);
+    $('#owner-stats').innerHTML = [
+        ['Registered players', data.length],
+        ['Total tokens', totalTokens],
+        ['Highest level', highestLevel],
+        ['Owner status', 'Verified']
+    ].map(([label, value]) => `<article class="stat-card"><span class="stat-label">${label}</span><strong class="stat-value">${value}</strong></article>`).join('');
 }
 
 function drawChat() {
