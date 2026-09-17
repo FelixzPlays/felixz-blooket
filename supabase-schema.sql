@@ -118,7 +118,7 @@ security definer
 set search_path = public
 as $$
 begin
-    if not public.is_owner() then
+    if auth.uid() is not null and not public.is_owner() then
         new.role = old.role;
         new.title = old.title;
     end if;
