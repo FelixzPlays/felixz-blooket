@@ -13,6 +13,7 @@ The script creates:
 - `games`: global game rooms with six-character codes.
 - `game_players`: players inside each room.
 - RLS policies and Realtime publication configuration.
+- Permanent XP, levels, tokens, titles, and the owner role.
 
 ## 2. Configure authentication
 
@@ -22,13 +23,25 @@ In Authentication > Providers > Email:
 - For quick local testing, disable Confirm email.
 - For a public launch, keep Confirm email enabled.
 
-In Authentication > URL Configuration, add the URL where `index.html` will be hosted to Site URL and Redirect URLs.
+In Authentication > URL Configuration, add the URL where `index.html` will be hosted to Site URL and Redirect UReLs.
 
 ## 3. Confirm the database
 
 In Supabase Dashboard > Table Editor, you should see `profiles`, `chat_messages`, `games`, and `game_players`. If `profiles` is missing, the SQL did not run successfully; read the SQL Editor error and run the file again after fixing that error.
 
-## 4. Open the game
+## 4. Set the owner account
+
+Create the account using `felipitinatorrocketleague@gmail.com`, then run this one-time command in Supabase SQL Editor:
+
+```sql
+update public.profiles
+set role = 'owner', title = 'Owner'
+where id = (select id from auth.users where email = 'felipitinatorrocketleague@gmail.com');
+```
+
+Do not put the owner password in GitHub or frontend code. Supabase Auth stores and verifies passwords.
+
+## 5. Open the game
 
 Open `index.html` after the SQL has finished. Create an account with an email, username and password.
 
@@ -38,7 +51,7 @@ The frontend uses the publishable key only. Never put a `service_role` key in `i
 
 If the browser starts without internet, Felixz Blooket automatically uses a local account store in `localStorage`. Quizzes, coins, packs, locker, stats, and local chat continue to work on that device. Those offline accounts are separate from Supabase accounts and do not sync automatically when internet returns.
 
-## 5. Multiplayer
+## 6. Multiplayer
 
 Choose **Play with friends**:
 
