@@ -24,6 +24,7 @@ button{cursor:pointer;border:0}
 .profile strong{font-size:1.25rem}
 .profile-blook{display:block;margin:8px 0 4px;font-size:2.6rem;line-height:1}
 .profile-badge{color:#f8c94a;font-size:.7rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.profile-title{display:block;margin-top:5px;color:#dce8ff;font-size:.78rem;font-weight:800}
 .nav{display:grid;gap:8px;margin-top:27px}
 .nav button{padding:13px 15px;border-radius:12px;color:var(--muted);background:transparent;text-align:left;font-weight:800}
 .nav button.active,.nav button:hover{color:var(--ink);background:white;box-shadow:0 4px 0 #dfd8c9}
@@ -202,6 +203,7 @@ h3{margin:0 0 6px}
 <strong id="player-name">Explorer</strong>
 <span id="profile-blook" class="profile-blook">&#11088;</span>
 <span id="profile-badge" class="profile-badge">Starter blook</span>
+<span id="profile-title" class="profile-title">Noob</span>
 </div>
 <nav class="nav" aria-label="Main navigation">
 <button class="active" data-view="home">&#127968; Home</button>
@@ -209,6 +211,8 @@ h3{margin:0 0 6px}
 <button data-view="collection">&#128218; Locker</button>
 <button data-view="games">&#127918; Play with friends</button>
 <button data-view="stats">&#128200; Stats</button>
+<button data-view="leaderboard">&#127942; Leaderboards</button>
+<button id="owner-nav" class="hidden" data-view="owner">&#128081; Owner panel</button>
 <button id="logout-button">&#8617; Log out</button>
 </nav>
 </aside>
@@ -327,6 +331,35 @@ h3{margin:0 0 6px}
 </div>
 <div id="stats-chart" class="chat-panel">
 </div>
+</section>
+<section id="leaderboard-view" class="view">
+<div class="intro">
+<div>
+<p class="eyebrow">Global rankings</p>
+<h1>Leaderboards.</h1>
+<p>Climb the rankings with tokens and permanent XP.</p>
+</div>
+</div>
+<div class="mode-grid">
+<article class="chat-panel">
+<div class="chat-head"><h2>&#127942; Token leaderboard</h2><span class="online">Global</span></div>
+<div id="tokens-leaderboard" class="messages"></div>
+</article>
+<article class="chat-panel">
+<div class="chat-head"><h2>&#11088; Level leaderboard</h2><span class="online">Global</span></div>
+<div id="levels-leaderboard" class="messages"></div>
+</article>
+</div>
+</section>
+<section id="owner-view" class="view">
+<div class="intro">
+<div>
+<p class="eyebrow">Felixz Blooket administration</p>
+<h1>Owner panel.</h1>
+<p>Private controls for the verified owner account.</p>
+</div>
+</div>
+<div class="stats-grid" id="owner-stats"></div>
 </section>
 <section id="games-view" class="view">
 <div class="intro">
